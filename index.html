@@ -66,7 +66,7 @@
 <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // ✅ Création d'une seule instance Supabase
+    // ✅ Initialisation de Supabase
     if (!window.supabase) {
         window.supabase = createClient(
             "https://ohbzyjpuqebvzkhbmtmp.supabase.co",
@@ -76,7 +76,7 @@
 
     const supabase = window.supabase;
 
-    // ✅ Fonction pour enregistrer un rapport dans Supabase
+    // ✅ Fonction pour enregistrer ou mettre à jour un rapport
     async function saveReport() {
         let local = document.getElementById("local").value.trim();
         let category = document.getElementById("category").value;
@@ -89,18 +89,40 @@
             return;
         }
 
-        console.log("📤 Envoi des données à Supabase...");
-        console.log({ local, category, roomType, corrected, observations });
+        console.log("📤 Vérification de l'existence du local...");
 
-        let { error } = await supabase
+        // Vérifier si le local existe déjà
+        let { data: existing, error: fetchError } = await supabase
             .from("rapports")
-            .insert([{ local, category, roomType, corrected, observations }]);
+            .select("*")
+            .eq("local", local)
+            .single();
 
-        if (error) {
-            console.error("❌ Erreur lors de l'enregistrement :", error);
+        if (fetchError && fetchError.code !== "PGRST116") { // Code 116 = Pas de correspondance trouvée
+            console.error("❌ Erreur lors de la vérification :", fetchError);
+            alert("Erreur lors de la vérification du local.");
+            return;
+        }
+
+        let response;
+        if (existing) {
+            console.log("🔄 Mise à jour de l'enregistrement existant...");
+            response = await supabase
+                .from("rapports")
+                .update({ category, roomType, corrected, observations })
+                .eq("local", local);
+        } else {
+            console.log("➕ Création d'un nouvel enregistrement...");
+            response = await supabase
+                .from("rapports")
+                .insert([{ local, category, roomType, corrected, observations }]);
+        }
+
+        if (response.error) {
+            console.error("❌ Erreur lors de l'enregistrement :", response.error);
             alert("Erreur lors de l'enregistrement. Vérifiez la console.");
         } else {
-            console.log("✅ Rapport enregistré !");
+            console.log("✅ Rapport enregistré/mis à jour !");
             loadReports();
         }
     }
@@ -120,13 +142,13 @@
         }
 
         data.forEach(report => {
-            let row = <tr>
+            let row = `<tr>
                 <td>${report.local}</td>
                 <td>${report.category}</td>
                 <td>${report.roomType}</td>
                 <td>${report.corrected}</td>
                 <td>${report.observations}</td>
-            </tr>;
+            </tr>`;
             tableBody.innerHTML += row;
         });
 
