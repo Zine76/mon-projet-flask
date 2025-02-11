@@ -160,6 +160,10 @@
         }, 1000);
     }
 
+    // 📌 Permet à l'HTML d'accéder aux fonctions
+    window.saveReport = saveReport;
+    window.exportPDF = exportPDF;
+
     // Charger les rapports au démarrage
     document.addEventListener("DOMContentLoaded", loadReports);
 </script>
