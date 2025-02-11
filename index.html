@@ -104,25 +104,30 @@
             return;
         }
 
-        let response;
         if (existing) {
-            console.log("🔄 Mise à jour de l'enregistrement existant...");
-            response = await supabase
+            console.log("🗑 Suppression de l'ancien enregistrement...");
+            let { error: deleteError } = await supabase
                 .from("rapports")
-                .update({ category, roomType, corrected, observations })
+                .delete()
                 .eq("local", local);
-        } else {
-            console.log("➕ Création d'un nouvel enregistrement...");
-            response = await supabase
-                .from("rapports")
-                .insert([{ local, category, roomType, corrected, observations }]);
+
+            if (deleteError) {
+                console.error("❌ Erreur lors de la suppression :", deleteError);
+                alert("Erreur lors de la suppression de l'ancien rapport.");
+                return;
+            }
         }
 
-        if (response.error) {
-            console.error("❌ Erreur lors de l'enregistrement :", response.error);
-            alert("Erreur lors de l'enregistrement. Vérifiez la console.");
+        console.log("➕ Création du nouvel enregistrement...");
+        let { error: insertError } = await supabase
+            .from("rapports")
+            .insert([{ local, category, roomType, corrected, observations }]);
+
+        if (insertError) {
+            console.error("❌ Erreur lors de l'insertion :", insertError);
+            alert("Erreur lors de l'insertion du rapport.");
         } else {
-            console.log("✅ Rapport enregistré/mis à jour !");
+            console.log("✅ Rapport enregistré avec succès !");
             loadReports();
         }
     }
