@@ -69,16 +69,16 @@
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w"
     );
 
-    // ✅ Fonction pour enregistrer un rapport et éviter les doublons
+    // ✅ Fonction pour enregistrer un rapport (avec doublons)
     async function saveReport() {
         let local = document.getElementById("local").value.trim();
-        let category = document.getElementById("category").value || "Non spécifié";
-        let roomType = document.getElementById("roomType").value || "Non spécifié";
-        let corrected = document.getElementById("corrected").value || "Non spécifié";
-        let observations = document.getElementById("observations").value.trim() || "Aucune observation";
+        let category = document.getElementById("category").value;
+        let roomType = document.getElementById("roomType").value;
+        let corrected = document.getElementById("corrected").value;
+        let observations = document.getElementById("observations").value.trim();
 
         if (!local) {
-            alert("❌ Veuillez entrer un nom de local !");
+            alert("Veuillez entrer un nom de local !");
             return;
         }
 
@@ -87,13 +87,13 @@
 
         let { error } = await supabase
             .from("rapports")
-            .upsert([{ local, category, roomType, corrected, observations }], { onConflict: ['local'] });
+            .insert([{ local, category, roomType, corrected, observations }]);
 
         if (error) {
             console.error("❌ Erreur lors de l'enregistrement :", error);
             alert("Erreur lors de l'enregistrement !");
         } else {
-            console.log("✅ Rapport mis à jour !");
+            console.log("✅ Rapport enregistré !");
             loadReports();
         }
     }
