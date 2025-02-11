@@ -44,8 +44,8 @@
         <label>Observations :</label>
         <textarea id="observations" class="form-control mb-2"></textarea>
 
-        <button onclick="saveReport()" class="btn btn-success">Enregistrer</button>
-        <button onclick="exportPDF()" class="btn btn-danger">Exporter en PDF</button>
+        <button id="saveBtn" class="btn btn-success">Enregistrer</button>
+        <button id="exportBtn" class="btn btn-danger">Exporter en PDF</button>
     </div>
 
     <h2 class="text-center text-primary mt-4">Rapports Enregistrés</h2>
@@ -64,14 +64,19 @@
 </div>
 
 <script type="module">
-    // 📌 Configuration Supabase
-    const SUPABASE_URL = "https://ohbzyjpuqebvzkhbmtmp.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w";
-
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 🔹 Fonction pour enregistrer un rapport dans Supabase
+    // ✅ Création d'une seule instance Supabase
+    if (!window.supabase) {
+        window.supabase = createClient(
+            "https://ohbzyjpuqebvzkhbmtmp.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w"
+        );
+    }
+
+    const supabase = window.supabase;
+
+    // ✅ Fonction pour enregistrer un rapport dans Supabase
     async function saveReport() {
         let local = document.getElementById("local").value.trim();
         let category = document.getElementById("category").value;
@@ -87,23 +92,20 @@
         console.log("📤 Envoi des données à Supabase...");
         console.log({ local, category, roomType, corrected, observations });
 
-        let { data, error } = await supabase
+        let { error } = await supabase
             .from("rapports")
-            .upsert([{ local, category, roomType, corrected, observations }]);
+            .insert([{ local, category, roomType, corrected, observations }]);
 
         if (error) {
             console.error("❌ Erreur lors de l'enregistrement :", error);
             alert("Erreur lors de l'enregistrement. Vérifiez la console.");
         } else {
-            console.log("✅ Rapport enregistré :", data);
-            document.getElementById("local").value = "";
-            document.getElementById("observations").value = "";
-
-            setTimeout(loadReports, 1000);
+            console.log("✅ Rapport enregistré !");
+            loadReports();
         }
     }
 
-    // 🔹 Fonction pour charger les rapports depuis Supabase
+    // ✅ Fonction pour charger les rapports depuis Supabase
     async function loadReports() {
         console.log("📥 Chargement des rapports...");
         
@@ -131,41 +133,10 @@
         console.log("✅ Rapports chargés :", data);
     }
 
-    // 🔹 Fonction pour exporter en PDF
-    function exportPDF() {
-        setTimeout(() => {
-            const { jsPDF } = window.jspdf;
-            let doc = new jsPDF("p", "mm", "a4");
-
-            doc.setFont("helvetica", "bold");
-            doc.text("Rapport des Salles", 14, 20);
-
-            let table = document.querySelector(".table");
-            let rows = table.querySelectorAll("tr");
-
-            let y = 30;
-            rows.forEach((row, index) => {
-                let cols = row.querySelectorAll("th, td");
-                let x = 10;
-
-                cols.forEach((col) => {
-                    doc.text(col.innerText, x, y);
-                    x += 50;
-                });
-
-                y += 10;
-            });
-
-            doc.save("Rapports.pdf");
-        }, 1000);
-    }
-
-    // 📌 Permet à l'HTML d'accéder aux fonctions
-    window.saveReport = saveReport;
-    window.exportPDF = exportPDF;
-
-    // Charger les rapports au démarrage
+    // ✅ Lier les boutons aux fonctions
+    document.getElementById("saveBtn").addEventListener("click", saveReport);
     document.addEventListener("DOMContentLoaded", loadReports);
+
 </script>
 
 </body>
