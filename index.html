@@ -14,7 +14,7 @@
 
     <div class="card p-4 shadow-sm">
         <label>Nom du Local :</label>
-        <input type="text" id="local" class="form-control mb-2">
+        <input type="text" id="local" class="form-control mb-2" required>
 
         <label>Catégorie :</label>
         <select id="category" class="form-control mb-2">
@@ -64,20 +64,26 @@
 </div>
 
 <script type="module">
-    // 📌 Configuration Supabase (remplace par tes vraies clés)
+    // 📌 Configuration Supabase
     const SUPABASE_URL = "https://ohbzyjpuqebvzkhbmtmp.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w"; // Remplace par ta nouvelle clé API
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w";
 
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // 🔹 Fonction pour enregistrer un rapport dans Supabase
     async function saveReport() {
-        let local = document.getElementById("local").value;
+        let local = document.getElementById("local").value.trim();
         let category = document.getElementById("category").value;
         let roomType = document.getElementById("roomType").value;
         let corrected = document.getElementById("corrected").value;
-        let observations = document.getElementById("observations").value;
+        let observations = document.getElementById("observations").value.trim();
+
+        // Vérifier que les champs sont remplis
+        if (!local) {
+            alert("Veuillez entrer un nom de local !");
+            return;
+        }
 
         let { data, error } = await supabase
             .from("rapports")
@@ -85,9 +91,12 @@
 
         if (error) {
             console.error("Erreur lors de l'enregistrement :", error);
+            alert("Erreur lors de l'enregistrement. Vérifiez la console.");
         } else {
             console.log("Rapport enregistré !");
             loadReports();
+            document.getElementById("local").value = "";
+            document.getElementById("observations").value = "";
         }
     }
 
@@ -97,6 +106,11 @@
 
         let tableBody = document.getElementById("reportTable");
         tableBody.innerHTML = "";
+
+        if (error) {
+            console.error("Erreur lors du chargement :", error);
+            return;
+        }
 
         data.forEach(report => {
             let row = `<tr>
@@ -108,15 +122,17 @@
             </tr>`;
             tableBody.innerHTML += row;
         });
+
+        console.log("Rapports chargés :", data);
     }
 
     // 🔹 Fonction pour exporter en PDF
     function exportPDF() {
         const { jsPDF } = window.jspdf;
-        let doc = new jsPDF();
+        let doc = new jsPDF("p", "mm", "a4");
 
         doc.setFont("helvetica", "bold");
-        doc.text("Rapport des Salles", 20, 20);
+        doc.text("Rapport des Salles", 14, 20);
 
         let table = document.querySelector(".table");
         let rows = table.querySelectorAll("tr");
