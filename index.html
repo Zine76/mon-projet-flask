@@ -96,15 +96,17 @@
             alert("Erreur lors de l'enregistrement. Vérifiez la console.");
         } else {
             console.log("✅ Rapport enregistré :", data);
-            loadReports();
             document.getElementById("local").value = "";
             document.getElementById("observations").value = "";
+
+            setTimeout(loadReports, 1000);
         }
     }
 
     // 🔹 Fonction pour charger les rapports depuis Supabase
     async function loadReports() {
         console.log("📥 Chargement des rapports...");
+        
         let { data, error } = await supabase.from("rapports").select("*");
 
         let tableBody = document.getElementById("reportTable");
@@ -131,29 +133,31 @@
 
     // 🔹 Fonction pour exporter en PDF
     function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        let doc = new jsPDF("p", "mm", "a4");
+        setTimeout(() => {
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF("p", "mm", "a4");
 
-        doc.setFont("helvetica", "bold");
-        doc.text("Rapport des Salles", 14, 20);
+            doc.setFont("helvetica", "bold");
+            doc.text("Rapport des Salles", 14, 20);
 
-        let table = document.querySelector(".table");
-        let rows = table.querySelectorAll("tr");
+            let table = document.querySelector(".table");
+            let rows = table.querySelectorAll("tr");
 
-        let y = 30;
-        rows.forEach((row, index) => {
-            let cols = row.querySelectorAll("th, td");
-            let x = 10;
+            let y = 30;
+            rows.forEach((row, index) => {
+                let cols = row.querySelectorAll("th, td");
+                let x = 10;
 
-            cols.forEach((col) => {
-                doc.text(col.innerText, x, y);
-                x += 50;
+                cols.forEach((col) => {
+                    doc.text(col.innerText, x, y);
+                    x += 50;
+                });
+
+                y += 10;
             });
 
-            y += 10;
-        });
-
-        doc.save("Rapports.pdf");
+            doc.save("Rapports.pdf");
+        }, 1000);
     }
 
     // Charger les rapports au démarrage
