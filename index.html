@@ -76,7 +76,7 @@
 
     const supabase = window.supabase;
 
-    // ✅ Fonction pour enregistrer un rapport dans Supabase
+    // ✅ Fonction pour enregistrer un rapport sans doublons
     async function saveReport() {
         let local = document.getElementById("local").value.trim();
         let category = document.getElementById("category").value;
@@ -89,18 +89,16 @@
             return;
         }
 
-        console.log("📤 Envoi des données à Supabase...");
-        console.log({ local, category, roomType, corrected, observations });
-
+        console.log("📤 Mise à jour des données dans Supabase...");
         let { error } = await supabase
             .from("rapports")
-            .insert([{ local, category, roomType, corrected, observations }]);
+            .upsert([{ local, category, roomType, corrected, observations }], { onConflict: ['local'] });
 
         if (error) {
             console.error("❌ Erreur lors de l'enregistrement :", error);
             alert("Erreur lors de l'enregistrement. Vérifiez la console.");
         } else {
-            console.log("✅ Rapport enregistré !");
+            console.log("✅ Rapport mis à jour !");
             loadReports();
         }
     }
@@ -133,8 +131,38 @@
         console.log("✅ Rapports chargés :", data);
     }
 
+    // ✅ Fonction pour exporter en PDF
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        let doc = new jsPDF("l", "mm", "a4");
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Rapport des Salles", 14, 20);
+
+        let table = document.querySelector(".table");
+        let rows = table.querySelectorAll("tr");
+
+        let y = 30;
+        let colWidths = [40, 50, 50, 30, 80]; // Ajuster les tailles des colonnes
+
+        rows.forEach((row, index) => {
+            let cols = row.querySelectorAll("th, td");
+            let x = 10;
+
+            cols.forEach((col, i) => {
+                doc.text(col.innerText, x, y);
+                x += colWidths[i];
+            });
+
+            y += 10;
+        });
+
+        doc.save("Rapports.pdf");
+    }
+
     // ✅ Lier les boutons aux fonctions
     document.getElementById("saveBtn").addEventListener("click", saveReport);
+    document.getElementById("exportBtn").addEventListener("click", exportPDF);
     document.addEventListener("DOMContentLoaded", loadReports);
 
 </script>
