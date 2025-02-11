@@ -66,105 +66,14 @@
 <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // ✅ Création d'une seule instance Supabase
-    if (!window.supabase) {
-        window.supabase = createClient(
-            "https://ohbzyjpuqebvzkhbmtmp.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w"
-        );
-    }
+    const supabase = createClient(
+        "https://ohbzyjpuqebvzkhbmtmp.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oYnp5anB1cWVidnpraGJtdG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDUwNDgsImV4cCI6MjA1NDgyMTA0OH0.n8j8N-LrZRI0EzBfKGyTAJKhhr6h1EQPP-FJ0oWOi0w"
+    );
 
-    const supabase = window.supabase;
-
-    // ✅ Fonction pour enregistrer un rapport sans doublons
-    async function saveReport() {
-        let local = document.getElementById("local").value.trim();
-        let category = document.getElementById("category").value;
-        let roomType = document.getElementById("roomType").value;
-        let corrected = document.getElementById("corrected").value;
-        let observations = document.getElementById("observations").value.trim();
-
-        if (!local) {
-            alert("Veuillez entrer un nom de local !");
-            return;
-        }
-
-        console.log("📤 Mise à jour des données dans Supabase...");
-        let { error } = await supabase
-            .from("rapports")
-            .upsert([{ local, category, roomType, corrected, observations }], { onConflict: ['local'] });
-
-        if (error) {
-            console.error("❌ Erreur lors de l'enregistrement :", error);
-            alert("Erreur lors de l'enregistrement. Vérifiez la console.");
-        } else {
-            console.log("✅ Rapport mis à jour !");
-            loadReports();
-        }
-    }
-
-    // ✅ Fonction pour charger les rapports depuis Supabase
-    async function loadReports() {
-        console.log("📥 Chargement des rapports...");
-        
-        let { data, error } = await supabase.from("rapports").select("*");
-
-        let tableBody = document.getElementById("reportTable");
-        tableBody.innerHTML = "";
-
-        if (error) {
-            console.error("❌ Erreur lors du chargement :", error);
-            return;
-        }
-
-        data.forEach(report => {
-            let row = `<tr>
-                <td>${report.local}</td>
-                <td>${report.category}</td>
-                <td>${report.roomType}</td>
-                <td>${report.corrected}</td>
-                <td>${report.observations}</td>
-            </tr>`;
-            tableBody.innerHTML += row;
-        });
-
-        console.log("✅ Rapports chargés :", data);
-    }
-
-    // ✅ Fonction pour exporter en PDF
-    function exportPDF() {
-        const { jsPDF } = window.jspdf;
-        let doc = new jsPDF("l", "mm", "a4");
-
-        doc.setFont("helvetica", "bold");
-        doc.text("Rapport des Salles", 14, 20);
-
-        let table = document.querySelector(".table");
-        let rows = table.querySelectorAll("tr");
-
-        let y = 30;
-        let colWidths = [40, 50, 50, 30, 80]; // Ajuster les tailles des colonnes
-
-        rows.forEach((row, index) => {
-            let cols = row.querySelectorAll("th, td");
-            let x = 10;
-
-            cols.forEach((col, i) => {
-                doc.text(col.innerText, x, y);
-                x += colWidths[i];
-            });
-
-            y += 10;
-        });
-
-        doc.save("Rapports.pdf");
-    }
-
-    // ✅ Lier les boutons aux fonctions
     document.getElementById("saveBtn").addEventListener("click", saveReport);
     document.getElementById("exportBtn").addEventListener("click", exportPDF);
     document.addEventListener("DOMContentLoaded", loadReports);
-
 </script>
 
 </body>
