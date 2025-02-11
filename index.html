@@ -79,21 +79,23 @@
         let corrected = document.getElementById("corrected").value;
         let observations = document.getElementById("observations").value.trim();
 
-        // Vérifier que les champs sont remplis
         if (!local) {
             alert("Veuillez entrer un nom de local !");
             return;
         }
+
+        console.log("📤 Envoi des données à Supabase...");
+        console.log({ local, category, roomType, corrected, observations });
 
         let { data, error } = await supabase
             .from("rapports")
             .upsert([{ local, category, roomType, corrected, observations }]);
 
         if (error) {
-            console.error("Erreur lors de l'enregistrement :", error);
+            console.error("❌ Erreur lors de l'enregistrement :", error);
             alert("Erreur lors de l'enregistrement. Vérifiez la console.");
         } else {
-            console.log("Rapport enregistré !");
+            console.log("✅ Rapport enregistré :", data);
             loadReports();
             document.getElementById("local").value = "";
             document.getElementById("observations").value = "";
@@ -102,13 +104,14 @@
 
     // 🔹 Fonction pour charger les rapports depuis Supabase
     async function loadReports() {
+        console.log("📥 Chargement des rapports...");
         let { data, error } = await supabase.from("rapports").select("*");
 
         let tableBody = document.getElementById("reportTable");
         tableBody.innerHTML = "";
 
         if (error) {
-            console.error("Erreur lors du chargement :", error);
+            console.error("❌ Erreur lors du chargement :", error);
             return;
         }
 
@@ -123,7 +126,7 @@
             tableBody.innerHTML += row;
         });
 
-        console.log("Rapports chargés :", data);
+        console.log("✅ Rapports chargés :", data);
     }
 
     // 🔹 Fonction pour exporter en PDF
